@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "rs",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "NAMOBJ": "PMI Benermeriah", "FCODE": null, "LCODE": "GI0020", "REMARK": "Rumah Sakit Khusus", "METADATA": null, "SRS_ID": null, "TIPRST": 0, "JPLYRS": 2, "ALAMAT": null }, "geometry": { "type": "Point", "coordinates": [ 96.852076326000088, 4.726988867000046 ] } },
+{ "type": "Feature", "properties": { "NAMOBJ": "RSUD Benermeriah", "FCODE": null, "LCODE": "GI0020", "REMARK": "Rumah Sakit Umum", "METADATA": null, "SRS_ID": null, "TIPRST": 0, "JPLYRS": 1, "ALAMAT": null }, "geometry": { "type": "Point", "coordinates": [ 96.860532566000074, 4.696374147000029 ] } },
+{ "type": "Feature", "properties": { "NAMOBJ": "Rencana RSUD", "FCODE": null, "LCODE": "GI0020", "REMARK": "Rumah Sakit Umum", "METADATA": null, "SRS_ID": null, "TIPRST": 0, "JPLYRS": 1, "ALAMAT": null }, "geometry": { "type": "Point", "coordinates": [ 96.811681976000045, 4.595384243000069 ] } },
+{ "type": "Feature", "properties": { "NAMOBJ": "Puskeswan Pusat Kesehatan Hewan", "FCODE": null, "LCODE": "GI0020", "REMARK": "Rumah Sakit Khusus", "METADATA": null, "SRS_ID": null, "TIPRST": 0, "JPLYRS": 2, "ALAMAT": null }, "geometry": { "type": "Point", "coordinates": [ 97.009657037000068, 4.588596061000032 ] } },
+{ "type": "Feature", "properties": { "NAMOBJ": "RSUD Dabungelang", "FCODE": null, "LCODE": "GI0020", "REMARK": "Rumah Sakit Umum", "METADATA": null, "SRS_ID": null, "TIPRST": 0, "JPLYRS": 1, "ALAMAT": null }, "geometry": { "type": "Point", "coordinates": [ 97.369263, 4.005823 ] } },
+{ "type": "Feature", "properties": { "NAMOBJ": "Puskeswan Pusat Kesehatan Hewan", "FCODE": null, "LCODE": "GI0020", "REMARK": "Rumah Sakit Khusus", "METADATA": null, "SRS_ID": null, "TIPRST": 0, "JPLYRS": 2, "ALAMAT": null }, "geometry": { "type": "Point", "coordinates": [ 97.009591979000049, 4.588592605000031 ] } }
+]
+}
