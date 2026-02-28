@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "jenis_bencana": "Gempa Bumi",
+    "lokasi": "Banda Aceh, Aceh",
+    "koordinat": [5.5483, 95.3238],
+    "radius_meter": 15000,
+    "tanggal": "2026-02-15",
+    "status": "Tanggap Darurat",
+    "dampak": { "korban_jiwa": 2, "luka_luka": 15, "kerusakan_bangunan": 85 },
+    "deskripsi": "Gempa tektonik bermagnitudo 5.8. Pusat gempa dangkal, getaran dirasakan kuat hingga wilayah pesisir."
+  },
+  {
+    "id": 2,
+    "jenis_bencana": "Banjir",
+    "lokasi": "Pidie, Aceh",
+    "koordinat": [5.3845, 95.9599],
+    "radius_meter": 8000,
+    "tanggal": "2026-02-20",
+    "status": "Pemulihan",
+    "dampak": { "korban_jiwa": 0, "luka_luka": 5, "kerusakan_bangunan": 120 },
+    "deskripsi": "Curah hujan tinggi menyebabkan sungai meluap. Merendam 3 kecamatan."
+  },
+  {
+    "id": 3,
+    "jenis_bencana": "Tanah Longsor",
+    "lokasi": "Agam, Sumatera Barat",
+    "koordinat": [-0.2605, 100.0333],
+    "radius_meter": 3000,
+    "tanggal": "2026-02-25",
+    "status": "Waspada",
+    "dampak": { "korban_jiwa": 1, "luka_luka": 4, "kerusakan_bangunan": 12 },
+    "deskripsi": "Longsor menutup akses jalan provinsi penghubung Bukittinggi - Padang."
+  },
+  {
+    "id": 4,
+    "jenis_bencana": "Karhutla",
+    "lokasi": "Bengkalis, Riau",
+    "koordinat": [1.4646, 102.1467],
+    "radius_meter": 25000,
+    "tanggal": "2026-02-27",
+    "status": "Tanggap Darurat",
+    "dampak": { "korban_jiwa": 0, "luka_luka": 28, "kerusakan_bangunan": 0 },
+    "deskripsi": "Kebakaran hutan dan lahan gambut. Asap pekat mulai mengganggu jarak pandang dan kesehatan warga."
+  }
+]
