@@ -1,111 +1,189 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, GeoJSON, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-interface Bencana {
-  id: number;
-  jenis_bencana: string;
-  lokasi: string;
-  koordinat: [number, number];
-  radius_meter: number; // Parameter baru untuk sebaran
-  tanggal: string;
-  status: string;
-  dampak: {
-    korban_jiwa: number;
-    luka_luka: number;
-    kerusakan_bangunan: number;
-  };
-  deskripsi: string;
-}
-
-// Fungsi untuk membuat Icon kustom berwarna tanpa perlu file gambar eksternal
-const getCustomIcon = (jenis: string) => {
-  let bgColor = 'bg-gray-500';
-  if (jenis === 'Gempa Bumi') bgColor = 'bg-red-500';
-  else if (jenis === 'Banjir') bgColor = 'bg-blue-500';
-  else if (jenis === 'Karhutla') bgColor = 'bg-orange-500';
-  else if (jenis === 'Tanah Longsor') bgColor = 'bg-yellow-600';
+// 1. Fungsi pembuat ikon dinamis berbasis HTML/CSS (Lebih aman dari bug gambar pecah)
+const getDynamicIcon = (jenis: string) => {
+  let bgColor = 'bg-gray-500'; // Default
+  if (jenis?.toLowerCase().includes('gempa')) bgColor = 'bg-red-500';
+  else if (jenis?.toLowerCase().includes('banjir')) bgColor = 'bg-blue-500';
+  else if (jenis?.toLowerCase().includes('karhutla')) bgColor = 'bg-orange-500';
 
   return L.divIcon({
     className: 'custom-div-icon',
-    // Menggunakan kelas Tailwind untuk styling icon titik
-    html: `<div class="w-5 h-5 rounded-full border-2 border-white shadow-md ${bgColor}"></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-    popupAnchor: [0, -10],
+    html: `<div class="w-6 h-6 rounded-full border-[3px] border-white shadow-md ${bgColor} flex items-center justify-center">
+             <div class="w-2 h-2 bg-white rounded-full opacity-70"></div>
+           </div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
   });
 };
 
-// Fungsi untuk menentukan warna lingkaran radius
-const getRadiusColor = (jenis: string) => {
-  if (jenis === 'Gempa Bumi') return '#ef4444'; // Merah
-  if (jenis === 'Banjir') return '#3b82f6'; // Biru
-  if (jenis === 'Karhutla') return '#f97316'; // Oranye
-  return '#ca8a04'; // Kuning (Longsor)
+// 2. Fungsi agar layer GeoJSON (Bangunan/Sungai) bisa memunculkan popup jika diklik
+const onEachFeature = (feature: any, layer: L.Layer) => {
+  if (feature.properties) {
+    const popupContent = Object.keys(feature.properties)
+      .map((key) => `<strong>${key}:</strong> ${feature.properties[key]}`)
+      .join('<br/>');
+    
+    if (popupContent) {
+      layer.bindPopup(`<div class="text-xs max-h-40 overflow-y-auto">${popupContent}</div>`);
+    }
+  }
 };
 
-export default function MapComponent() {
-  const [dataBencana, setDataBencana] = useState<Bencana[]>([]);
+// --- KOMPONEN UTAMA PETA ---
+export default function MapComponent({ dataBencana }: { dataBencana: any[] }) {
+  const [geoData, setGeoData] = useState({
+    sungai: null,
+    bangunan: null,
+    rumahSakit: null,
+    areaTerdampak: null
+  });
 
   useEffect(() => {
-    fetch('/data-bencana.json')
-      .then((res) => res.json())
-      .then((data) => setDataBencana(data))
-      .catch((err) => console.error("Gagal memuat data bencana:", err));
+    // Fetch data layer infrastruktur secara paralel dari API buatan tim
+    Promise.all([
+      fetch('/api/sungai').then(res => res.json()).catch(() => null),
+      fetch('/api/bangunan').then(res => res.json()).catch(() => null),
+      fetch('/api/rumahsakit').then(res => res.json()).catch(() => null),
+      fetch('/api/area-terdampak').then(res => res.json()).catch(() => null)
+    ]).then(([sungai, bangunan, rumahSakit, areaTerdampak]) => {
+      setGeoData({ sungai, bangunan, rumahSakit, areaTerdampak });
+    });
   }, []);
 
   return (
     <MapContainer
-      center={[0.9, 100.0]} // Diarahkan lebih ke tengah Sumatra agar semua titik terlihat
-      zoom={6}
+      center={[4.8, 96.5]} // Fokus ke area tengah/utara Sumatra (Aceh)
+      zoom={7}
       style={{ height: '100%', width: '100%' }}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
-      />
-
-      {dataBencana.map((bencana) => (
-        <div key={bencana.id}>
-          {/* LINGKARAN RADIUS SEBARAN TERDAMPAK */}
-          <Circle 
-            center={bencana.koordinat} 
-            radius={bencana.radius_meter}
-            pathOptions={{ 
-              color: getRadiusColor(bencana.jenis_bencana), 
-              fillColor: getRadiusColor(bencana.jenis_bencana),
-              fillOpacity: 0.2,
-              weight: 2
-            }}
+      <LayersControl position="topright">
+        
+        {/* === PETA DASAR === */}
+        <LayersControl.BaseLayer checked name="Peta Terang (Carto)">
+          <TileLayer
+            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" 
           />
+        </LayersControl.BaseLayer>
 
-          {/* TITIK PUSAT BENCANA */}
-          <Marker position={bencana.koordinat} icon={getCustomIcon(bencana.jenis_bencana)}>
-            <Popup className="custom-popup">
-              <div className="min-w-[220px]">
-                <h3 className="font-bold text-lg border-b pb-1 mb-2">{bencana.jenis_bencana}</h3>
-                <p className="text-sm mb-1"><strong>Lokasi:</strong> {bencana.lokasi}</p>
-                <p className="text-sm mb-1"><strong>Radius Terdampak:</strong> {bencana.radius_meter / 1000} km</p>
-                <p className="text-sm mb-2"><strong>Status:</strong> 
-                  <span className={`ml-1 px-2 py-0.5 rounded text-xs text-white ${bencana.status === 'Tanggap Darurat' ? 'bg-red-500' : (bencana.status === 'Waspada' ? 'bg-yellow-500' : 'bg-green-500')}`}>
-                    {bencana.status}
-                  </span>
-                </p>
-                
-                <div className="bg-gray-100 p-2 rounded text-xs mb-2">
-                  <p>Korban Jiwa: <strong>{bencana.dampak.korban_jiwa}</strong></p>
-                  <p>Luka-luka: <strong>{bencana.dampak.luka_luka}</strong></p>
-                  <p>Bangunan Rusak: <strong>{bencana.dampak.kerusakan_bangunan}</strong></p>
+        <LayersControl.BaseLayer name="Peta Satelit (Esri)">
+          <TileLayer
+            attribution='&copy; Esri'
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          />
+        </LayersControl.BaseLayer>
+
+        {/* === LAYER INFRASTRUKTUR GEOJSON === */}
+        {geoData.areaTerdampak && (
+          <LayersControl.Overlay checked name="Area Terdampak">
+            <GeoJSON 
+              data={geoData.areaTerdampak} 
+              style={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.2, weight: 1.5, dashArray: '4' }} 
+              onEachFeature={onEachFeature}
+            />
+          </LayersControl.Overlay>
+        )}
+
+        {/* Layer ini TIDAK dicentang (checked) secara default agar tidak lag */}
+        {geoData.bangunan && (
+          <LayersControl.Overlay name="Sebaran Bangunan">
+            <GeoJSON 
+              data={geoData.bangunan} 
+              style={{ color: '#9ca3af', fillColor: '#d1d5db', weight: 1, fillOpacity: 0.6 }} 
+              onEachFeature={onEachFeature}
+            />
+          </LayersControl.Overlay>
+        )}
+
+        {/* Layer ini TIDAK dicentang (checked) secara default agar tidak lag */}
+        {geoData.sungai && (
+          <LayersControl.Overlay name="Jaringan Sungai">
+            <GeoJSON 
+              data={geoData.sungai} 
+              style={{ color: '#3b82f6', weight: 2, opacity: 0.8 }} 
+              onEachFeature={onEachFeature}
+            />
+          </LayersControl.Overlay>
+        )}
+
+        {geoData.rumahSakit && (
+          <LayersControl.Overlay checked name="Fasilitas Rumah Sakit">
+            <GeoJSON 
+              data={geoData.rumahSakit} 
+              // Fix Ikon Rusak: Mengubah titik rumah sakit menjadi CircleMarker
+              pointToLayer={(feature, latlng) => {
+                return L.circleMarker(latlng, {
+                  radius: 5,
+                  fillColor: "#10b981", // Hijau
+                  color: "#ffffff",
+                  weight: 1.5,
+                  opacity: 1,
+                  fillOpacity: 0.9
+                });
+              }}
+              onEachFeature={onEachFeature}
+            />
+          </LayersControl.Overlay>
+        )}
+
+        {/* === LAYER TITIK BENCANA (DARI DATABASE) === */}
+        <LayersControl.Overlay checked name="Titik Bencana Utama">
+          <LayerGroup>
+            {dataBencana.map((bencana) => {
+              // Mengambil koordinat, mendukung format array JSON lama atau kolom terpisah dari DB baru
+              const lat = bencana.latitude || (bencana.koordinat && bencana.koordinat[0]);
+              const lng = bencana.longitude || (bencana.koordinat && bencana.koordinat[1]);
+              
+              if (!lat || !lng) return null; // Lewati jika koordinat tidak valid
+
+              return (
+                <div key={bencana.id}>
+                  {bencana.radius_meter && (
+                    <Circle 
+                      center={[lat, lng]} 
+                      radius={bencana.radius_meter}
+                      pathOptions={{ color: 'red', fillOpacity: 0.1, weight: 1 }}
+                    />
+                  )}
+                  <Marker 
+                    position={[lat, lng]} 
+                    icon={getDynamicIcon(bencana.jenis_bencana)}
+                  >
+                    <Popup className="custom-popup">
+                      <div className="min-w-[220px]">
+                        <h3 className="font-bold text-lg border-b pb-1 mb-2">{bencana.jenis_bencana}</h3>
+                        <p className="text-sm mb-1"><strong>Lokasi:</strong> {bencana.lokasi}</p>
+                        <p className="text-sm mb-2"><strong>Status:</strong> 
+                          <span className="ml-1 px-2 py-0.5 rounded text-[10px] text-white bg-gray-600 uppercase tracking-wider">
+                            {bencana.status || 'Terdata'}
+                          </span>
+                        </p>
+                        <div className="bg-gray-100 p-2 rounded text-xs">
+                          <p>Meninggal: <strong>{bencana.korban_jiwa || (bencana.dampak && bencana.dampak.korban_jiwa) || 0}</strong></p>
+                          <p>Luka-luka: <strong>{bencana.luka_luka || (bencana.dampak && bencana.dampak.luka_luka) || 0}</strong></p>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
                 </div>
-                <p className="text-xs text-gray-600 italic">{bencana.deskripsi}</p>
-              </div>
-            </Popup>
-          </Marker>
-        </div>
-      ))}
+              );
+            })}
+          </LayerGroup>
+        </LayersControl.Overlay>
+
+      </LayersControl>
     </MapContainer>
   );
+}
+
+// Trick untuk mengelompokkan marker React-Leaflet di dalam LayersControl
+function LayerGroup({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
